@@ -25,6 +25,7 @@
 
 import time
 import re
+from urlparse import urlparse
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
@@ -39,6 +40,7 @@ class HttpResponseCodeLogster(LogsterParser):
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code).
         self.reg = re.compile('.*HTTP/1.\d\" (?P<http_status_code>\d{3}) .*')
+        self.url_reg = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
 
 
     def parse_line(self, line):
@@ -50,9 +52,16 @@ class HttpResponseCodeLogster(LogsterParser):
             regMatch = self.reg.match(line)
 
             if regMatch:
+                url_search = self.url_reg.search(line)
+                if url_search:
+                    site = url_search.group()
+                    site = urlparse(site).hostname.replace('.', '_')
+                else:
+                    site = ''
                 linebits = regMatch.groupdict()
                 status = int(linebits['http_status_code'])
-                self.response_counts[status] = self.response_counts.get(status, 0) + 1
+                datapoint = '%s_http_%s' % (site, status)
+                self.response_counts[datapoint] = self.response_counts.get(datapoint, 0) + 1
             else:
                 raise LogsterParsingException, "regmatch failed to match"
 
@@ -65,4 +74,4 @@ class HttpResponseCodeLogster(LogsterParser):
         and return a list of metric objects.'''
         self.duration = duration
         # Return a list of metrics objects
-        return [MetricObject("http_%s" % k, (v / self.duration), "Responses per sec") for k, v in self.response_counts.items()]
+        return [MetricObject(k, (v / self.duration), "Responses per sec") for k, v in self.response_counts.items()]
