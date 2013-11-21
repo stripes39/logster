@@ -23,12 +23,12 @@
 ###  along with Logster. If not, see <http://www.gnu.org/licenses/>.
 ###
 
-import time
 import re
 from urlparse import urlparse
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
+
 
 class HttpResponseCodeLogster(LogsterParser):
 
@@ -41,7 +41,6 @@ class HttpResponseCodeLogster(LogsterParser):
         # fields from the line (in this case, http_status_code).
         self.reg = re.compile('.*HTTP/1.\d\" (?P<http_status_code>\d{3}) .*')
         self.url_reg = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
-
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -63,11 +62,10 @@ class HttpResponseCodeLogster(LogsterParser):
                 datapoint = '%s_http_%s' % (site, status)
                 self.response_counts[datapoint] = self.response_counts.get(datapoint, 0) + 1
             else:
-                raise LogsterParsingException, "regmatch failed to match"
+                raise LogsterParsingException("regmatch failed to match")
 
         except Exception, e:
-            raise LogsterParsingException, "regmatch or contents failed with %s" % e
-
+            raise LogsterParsingException("regmatch or contents failed with %s" % e)
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
