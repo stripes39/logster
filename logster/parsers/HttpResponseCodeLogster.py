@@ -47,6 +47,8 @@ class HttpResponseCodeLogster(LogsterParser):
         object's state variables. Takes a single argument, the line to be parsed.'''
 
         try:
+            if '9acb44549b41563697bb490144ec6258' in line:
+                raise LogsterParsingException("Ignoring status page requests")
             # Apply regular expression to each line and extract interesting bits.
             regMatch = self.reg.match(line)
 
@@ -56,10 +58,10 @@ class HttpResponseCodeLogster(LogsterParser):
                     site = url_search.group()
                     site = urlparse(site).hostname.replace('.', '_')
                 else:
-                    site = ''
+                    site = 'unknown_site'
                 linebits = regMatch.groupdict()
                 status = int(linebits['http_status_code'])
-                datapoint = '%s_http_%s' % (site, status)
+                datapoint = '%s.http_%s' % (site, status)
                 self.response_counts[datapoint] = self.response_counts.get(datapoint, 0) + 1
             else:
                 raise LogsterParsingException("regmatch failed to match")
