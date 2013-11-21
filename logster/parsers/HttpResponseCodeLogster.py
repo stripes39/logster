@@ -24,7 +24,7 @@
 ###
 
 import re
-from urlparse import urlparse
+# from urlparse import urlparse
 
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
@@ -40,7 +40,7 @@ class HttpResponseCodeLogster(LogsterParser):
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line (in this case, http_status_code).
         self.reg = re.compile('.*HTTP/1.\d\" (?P<http_status_code>\d{3}) .*')
-        self.url_reg = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
+        # self.url_reg = re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -53,12 +53,15 @@ class HttpResponseCodeLogster(LogsterParser):
             regMatch = self.reg.match(line)
 
             if regMatch:
-                url_search = self.url_reg.search(line)
-                if url_search:
-                    site = url_search.group()
-                    site = urlparse(site).hostname.replace('.', '_')
-                else:
-                    site = 'unknown_site'
+                # Going the simple, but not backwards-compatible route
+                site = line.strip().split()[-1].strip('"')
+                site = site.replace('.', '_')
+                # url_search = self.url_reg.search(line)
+                # if url_search:
+                #     site = url_search.group()
+                #     site = urlparse(site).hostname.replace('.', '_')
+                # else:
+                #     site = 'unknown_site'
                 linebits = regMatch.groupdict()
                 status = int(linebits['http_status_code'])
                 datapoint = '%s.http_%s' % (site, status)
