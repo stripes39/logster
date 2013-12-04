@@ -64,7 +64,7 @@ class HttpResponseCodeLogster(LogsterParser):
                 #     site = 'unknown_site'
                 linebits = regMatch.groupdict()
                 status = int(linebits['http_status_code'])
-                datapoint = '%s.http_%s' % (site, status)
+                datapoint = 'http_stats.%s.http_%s' % (site, status)
                 self.response_counts[datapoint] = self.response_counts.get(datapoint, 0) + 1
             else:
                 raise LogsterParsingException("regmatch failed to match")
